@@ -1,34 +1,85 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import * as bcrypt from 'bcrypt'
+import * as jwt from 'jsonwebtoken'
 
 //mongodb
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import {Companys, CompanyDocument} from './models/company.model'
+import { Companys, CompanyDocument } from './models/company.model'
 
 @Injectable()
 export class CompanyService {
-  constructor(@InjectModel(Companys.name) private companyModel: Model<CompanyDocument>) {}
+  constructor(@InjectModel(Companys.name) private companyModel: Model<CompanyDocument>) { }
 
-  create(createCompanyDto: CreateCompanyDto) {
-    return 'This action adds a new company';
+  async create(createCompanyDto: CreateCompanyDto) {
+    const { name, email, address, rut, city, faena, contract_number, password } = createCompanyDto
+    const existUser = await this.companyModel.findOne({ email: email })
+    if (existUser) {
+      return 'email alredy exists'
+    }
+
+    if (password.length <= 7) {
+      return 'se requiere que la password tenga un minimo de 8 caracteres'
+    }
+
+    const newCampany = new this.companyModel({ name, email, address, rut, city, faena, contract_number, password })
+    newCampany.password = await bcrypt.hash(password, 10)
+    await newCampany.save()
+    return {
+      message: 'ok',
+      body: newCampany
+    }
+
   }
 
   async findAll() {
-    const data = await this.companyModel.find()
-    return data;
+    try {
+      const data = await this.companyModel.find()
+      return data;
+
+    } catch (error) {
+      return error
+
+    }
+
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    try {
+      const data = await this.companyModel.findOne({ _id: id })
+      return data;
+    } catch (error) {
+      return error
+    }
+
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    try {
+      const { name, email, address, rut, city, faena, contract_number, password } = updateCompanyDto
+    
+      const data = await this.companyModel.findOneAndUpdate({ _id: id }, {
+        name, email, address, rut, city, faena, contract_number, password
+
+      }, { new: true })
+      return data
+
+    } catch (error) {
+      return error
+
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+  async remove(id: string) {
+    try {
+      await this.companyModel.findByIdAndDelete({ _id: id })
+      return 'company deleted'
+
+    } catch (error) {
+      return error
+
+    }
   }
 }
