@@ -75,7 +75,8 @@ export class CompanyService {
   async remove(id: string) {
     try {
       await this.companyModel.findByIdAndDelete({ _id: id })
-      return 'company deleted'
+      let data= {'message': 'company deleted'}
+      return data
 
     } catch (error) {
       return error
