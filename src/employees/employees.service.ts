@@ -40,8 +40,14 @@ export class EmployeesService {
 
   }
 
-  findAll() {
-    return `This action returns all employees`;
+  async findAll() {
+    try {
+      const data = await this.employeeModel.find()
+      return data;
+    } catch (error) {
+      return error
+    }
+
   }
 
   findOne(id: number) {
