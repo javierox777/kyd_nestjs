@@ -1,9 +1,11 @@
-import { Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Prop,Schema as Schemas , SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema } from 'mongoose';
 import { IsEmail, } from 'class-validator'
 
+
 export type EmployeeDocument = Employee & Document;
 
+@Schemas()
 export class Employee {
     @Prop()
     name:string
@@ -15,8 +17,7 @@ export class Employee {
     scholarship:string
     @Prop()
     post:string
-    @Prop({ type: Schema.Types.ObjectId, ref: 'companys' }  
-      )
+    @Prop({ type: Schema.Types.ObjectId, ref: 'companys' })
     id_faena: Schema.Types.ObjectId; 
     @Prop()
     driver_license:string

@@ -9,36 +9,35 @@ import { Model } from 'mongoose';
 export class EmployeesService {
 
   constructor(@InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>) { }
+
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const { name,
-      rut,
-      age,
-      scholarship,
-      post,
-      id_faena,
-      driver_license,
-      valid_driver_license } = createEmployeeDto
+  const { name, rut, age, scholarship, post, id_faena, driver_license, valid_driver_license } = createEmployeeDto;
 
-    const existRut = await this.employeeModel.findOne({ rut: rut })
-    if (existRut) {
-      return "this rut already exists, plys you neet delete users for creead here"
-    }
-
-    const newEmployee = new this.employeeModel({
-      name,
-      rut,
-      age,
-      scholarship,
-      post,
-      id_faena,
-      driver_license,
-      valid_driver_license
-    })
-    await newEmployee.save()
-
-    return "employee created"
-
+  const existRut = await this.employeeModel.findOne({ rut: rut });
+  if (existRut) {
+    return "This RUT already exists, please delete users to create here.";
   }
+
+
+
+  const newEmployee = new this.employeeModel({
+    name,
+    rut,
+    age,
+    scholarship,
+    post,
+    id_faena, // Debe ser un ObjectId válido
+    driver_license,
+    valid_driver_license,
+  });
+  
+  // Añade las fechas si es necesario
+  newEmployee.dateAt = new Date();
+  newEmployee.dateEnd = null; // Puedes establecerlo según tus necesidades
+
+  await newEmployee.save();
+  return newEmployee;
+}
 
   async findAll() {
     try {
