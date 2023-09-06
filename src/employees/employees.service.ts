@@ -49,15 +49,57 @@ export class EmployeesService {
 
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} employee`;
+ async findOne(rut: string) {
+    try {
+      const existRut = await this.employeeModel.findOne({ "rut": rut });
+      if(existRut){
+        return existRut      
+      }
+      return {"data":"rut no valido"}
+    } catch (error) {
+      return {"message":error} 
+    }
+
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
-  }
+ async update(id: string, updateEmployeeDto: UpdateEmployeeDto) {
+   
+  try {
+    const {name,
+      rut,
+      age,
+      scholarship,
+      post,
+      id_faena, 
+      driver_license,
+      valid_driver_license} = updateEmployeeDto
 
-  remove(id: number) {
-    return `This action removes a #${id} employee`;
+      const employee = await this.employeeModel.findOneAndUpdate({_id:id},{
+       name,
+      rut,
+      age,
+      scholarship,
+      post,
+      id_faena, 
+      driver_license,
+      valid_driver_license
+
+      }, {new:true})
+    return employee;
+  
+    
+  } catch (error) {
+    return {"message":error}
+  }
+ }
+async  remove(id: string) {
+    
+
+    try {
+      await this.employeeModel.findOneAndDelete({_id:id})
+      return {"data":"user deleted"}
+    } catch (error) {
+      return {"message":error}
+    }
   }
 }
