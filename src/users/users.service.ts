@@ -4,14 +4,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 import { generartokenActivacion } from '../helper/generatetoken-activate'
 
-
-
 import * as bcrypt from 'bcrypt'
 import * as jwt from 'jsonwebtoken'
 //mongodb
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Users, UsersDocument } from './models/user.model'
+import { ObjectUnsubscribedError } from 'rxjs';
 
 
 @Injectable()
@@ -19,7 +18,7 @@ export class UsersService {
   constructor(@InjectModel(Users.name) private usersModel: Model<UsersDocument>) { }
 
   async create(CreateUserDto: CreateUserDto) {
-    const { email, password } = CreateUserDto
+    const { email, password, userName, rol } = CreateUserDto
     const existUser = await this.usersModel.findOne({ email: email })
     if (existUser) {
       return 'email alredy exists'
@@ -29,54 +28,60 @@ export class UsersService {
       return 'se requiere que la password tenga un minimo de 8 caracteres'
     }
 
-    const newUser = new this.usersModel({ email, password })
+    const newUser = new this.usersModel({ email, password, userName, rol })
     newUser.confirm = generartokenActivacion()
     newUser.password = await bcrypt.hash(password, 10)
     await newUser.save()
-    const token = jwt.sign({ _id: newUser._id }, "algo")
+    // const token = jwt.sign({ _id: newUser._id }, "algo")
+    newUser.password = undefined
     return {
       message: 'ok',
-      token: token,
       body: newUser
     }
 
   }
 
   async signIn(CreateUserDto: CreateUserDto) {
-    const { email, password } = CreateUserDto
-    const existUser = await this.usersModel.findOne({ email: email })
-    if (!existUser) {
+    try {
+      const { email, password } = CreateUserDto
+      const existUser = await this.usersModel.findOne({ email: email })
+      if (!existUser) {
+        return {
+          message: "email o password incorrect"
+        }
+      }
+      // if(!existUser.default) {
+      //   return 'tu cuenta no ha sido confirmada'
+      // }
+
+      const match = await bcrypt.compare(password, existUser.password)
+      if (match) {
+        const token = jwt.sign({ _id: existUser._id }, 'algo')
+        existUser.password = undefined
+        return {
+          message: "success",
+          token: token,
+          data: existUser
+        }
+      }
       return {
         message: "email o password incorrect"
       }
-    }
-    // if(!existUser.default) {
-    //   return 'tu cuenta no ha sido confirmada'
-    // }
 
-    const match = await bcrypt.compare(password, existUser.password)
-    if (match) {
-      const token = jwt.sign({ _id: existUser._id }, 'algo')
-      return {
-        message: "success",
-        token: token,
-        body: existUser.name
-      }
-    }
-    return {
-      message: "email o password incorrect"
+    } catch (error) {
+      return { "message": error }
     }
 
   }
 
   async findAll() {
     try {
-        const data = await this.usersModel.find()
-    return data;
+      const data = await this.usersModel.find()
+      return data;
     } catch (error) {
       return error
     }
-  
+
   }
   //buscar por id
   async findOne(id: string) {
@@ -151,13 +156,13 @@ export class UsersService {
 
   }
 
- async remove(id: string) {
+  async remove(id: string) {
     try {
-      await this.usersModel.findOneAndDelete({_id:id})
+      await this.usersModel.findOneAndDelete({ _id: id })
       return "user is remuved"
     } catch (error) {
       return error
     }
-   
+
   }
 }
