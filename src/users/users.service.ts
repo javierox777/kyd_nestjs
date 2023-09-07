@@ -62,7 +62,9 @@ export class UsersService {
         return {
           message: "success",
           token: token,
-          data: existUser
+          userName: existUser.userName,
+          email:existUser.email,
+          rol:existUser.rol
         }
       }
       return {
