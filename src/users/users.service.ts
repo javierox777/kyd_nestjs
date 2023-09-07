@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Users, UsersDocument } from './models/user.model'
 import { ObjectUnsubscribedError } from 'rxjs';
+import { SignInDto } from './dto/signin-user.dto';
 
 
 @Injectable()
@@ -41,9 +42,9 @@ export class UsersService {
 
   }
 
-  async signIn(CreateUserDto: CreateUserDto) {
+  async signIn(SignInDto: SignInDto) {
     try {
-      const { email, password } = CreateUserDto
+      const { email, password } = SignInDto
       const existUser = await this.usersModel.findOne({ email: email })
       if (!existUser) {
         return {
